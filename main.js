@@ -1,6 +1,30 @@
+// Handle mouse clicks for objects
+function onMouseClick(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  // Check intersections for clicks
+  const intersects = raycaster.intersectObjects(orbitPivot.children); // Check orbitPivot's children
+  if (intersects.length > 0) {
+    const clickedObject = intersects[0].object;
+
+    // Display a popup message with the object's name
+    alert(`Clicked on ${clickedObject.name}`);
+  }
+}
+
+// Attach click event listener
+window.addEventListener('click', onMouseClick);
+
+// Updated Full Code
 import './style.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -13,10 +37,10 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 camera.position.setZ(30);
 
 // Lights
-const pointLight = new THREE.PointLight(0xffffff, 2);
+const pointLight = new THREE.PointLight(0xffffff, 5); // Adjusted for more brightness
 pointLight.position.set(20, 20, 20);
 
-const ambLight = new THREE.AmbientLight(0xffffff, 0.2);
+const ambLight = new THREE.AmbientLight(0xffffff, 0.5); // Adjusted for softer overall brightness
 scene.add(pointLight, ambLight);
 
 // Helpers
@@ -29,7 +53,6 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 // Array to store stars and their initial positions
 const stars = [];
-
 function addStar() {
   const geometry = new THREE.SphereGeometry(0.125);
   const material = new THREE.MeshStandardMaterial({
@@ -51,7 +74,6 @@ function addStar() {
 
   scene.add(star);
 }
-
 Array(300).fill().forEach(addStar);
 
 // Background Texture
@@ -177,14 +199,30 @@ spade.name = 'Spade';
 spade.position.set(0, 0, -30);
 orbitPivot.add(spade);
 
-// Raycaster for detecting clicks
-let hoveredObject = null; // To track the currently hovered object
+// Composer and OutlinePass setup
+const composer = new EffectComposer(renderer);
+const renderPass = new RenderPass(scene, camera);
+composer.addPass(renderPass);
 
-// Raycaster for detecting hover and clicks
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
+const outlinePass = new OutlinePass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight),
+  scene,
+  camera
+);
+composer.addPass(outlinePass);
+
+outlinePass.edgeStrength = 10; // Outline thickness
+outlinePass.edgeGlow = 0.5;    // Glow effect
+outlinePass.edgeThickness = 1.0; // Edge thickness
+outlinePass.pulsePeriod = 0;    // No pulsing
+outlinePass.visibleEdgeColor.set('#ffff00'); // Yellow outline
+outlinePass.hiddenEdgeColor.set('#000000'); // Black outline
 
 // Handle mouse movement for hover highlighting
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let hoveredObject = null;
+
 function onMouseMove(event) {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -198,57 +236,16 @@ function onMouseMove(event) {
 
     // Highlight the object only if it's a new hover
     if (hoveredObject !== object) {
-      // Reset the previously hovered object
-      if (hoveredObject) {
-        hoveredObject.material.emissiveIntensity = hoveredObject.material.originalEmissiveIntensity || 1;
-        hoveredObject.material.color.set(hoveredObject.material.originalColor || 0xffffff);
-      }
-
-      // Highlight the new object
       hoveredObject = object;
-      hoveredObject.material.originalEmissiveIntensity = hoveredObject.material.emissiveIntensity;
-      hoveredObject.material.emissiveIntensity = 5; // Highlight intensity
-      hoveredObject.material.originalColor = hoveredObject.material.color.getHex();
-      hoveredObject.material.color.set(0xffff00); // Highlight color (yellow)
+      outlinePass.selectedObjects = [hoveredObject];
     }
-  } else if (hoveredObject) {
-    // Reset if no object is hovered
-    hoveredObject.material.emissiveIntensity = hoveredObject.material.originalEmissiveIntensity || 1;
-    hoveredObject.material.color.set(hoveredObject.material.originalColor || 0xffffff);
+  } else {
     hoveredObject = null;
+    outlinePass.selectedObjects = [];
   }
 }
 
-// Handle mouse clicks
-function onMouseClick(event) {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-  raycaster.setFromCamera(mouse, camera);
-
-  // Check intersections for clicks
-  const intersects = raycaster.intersectObjects(orbitPivot.children);
-  if (intersects.length > 0) {
-    const clickedObject = intersects[0].object;
-    console.log(`You clicked on ${clickedObject.name}`);
-    switch (clickedObject.name) {
-      case 'Happy':
-        alert('You clicked on the Smile Sphere!');
-        break;
-      case 'Heart':
-        alert('You clicked on the Heart!');
-        break;
-      case 'Crown':
-        alert('You clicked on the Crown!');
-        break;
-      case 'Spade':
-        alert('You clicked on the Spade!');
-        break;
-    }
-  }
-}
-
-// Attach event listeners
+// Attach hover and click event listeners
 window.addEventListener('mousemove', onMouseMove);
 window.addEventListener('click', onMouseClick);
 
@@ -275,7 +272,7 @@ function animate() {
 
   torus.rotation.y += 0.01;
   controls.update();
-  renderer.render(scene, camera);
+  composer.render();
 }
 
 function moveCamera() {
