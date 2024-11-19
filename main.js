@@ -167,7 +167,7 @@ const spadeGeometry = new THREE.ExtrudeGeometry(spadeShape, {
 const spadeMaterial = new THREE.MeshStandardMaterial({
   color: 0x000000,
   emissive: 0x333333,
-  emissiveIntensity: 1.0,
+  emissiveIntensity: 1.2,
   metalness: 0.2,
   roughness: 0.7,
 });
@@ -178,15 +178,55 @@ spade.position.set(0, 0, -30);
 orbitPivot.add(spade);
 
 // Raycaster for detecting clicks
+let hoveredObject = null; // To track the currently hovered object
+
+// Raycaster for detecting hover and clicks
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+// Handle mouse movement for hover highlighting
+function onMouseMove(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  // Check intersections for hover
+  const intersects = raycaster.intersectObjects([...orbitPivot.children, ...stars.map(s => s.mesh)]);
+  if (intersects.length > 0) {
+    const object = intersects[0].object;
+
+    // Highlight the object only if it's a new hover
+    if (hoveredObject !== object) {
+      // Reset the previously hovered object
+      if (hoveredObject) {
+        hoveredObject.material.emissiveIntensity = hoveredObject.material.originalEmissiveIntensity || 1;
+        hoveredObject.material.color.set(hoveredObject.material.originalColor || 0xffffff);
+      }
+
+      // Highlight the new object
+      hoveredObject = object;
+      hoveredObject.material.originalEmissiveIntensity = hoveredObject.material.emissiveIntensity;
+      hoveredObject.material.emissiveIntensity = 5; // Highlight intensity
+      hoveredObject.material.originalColor = hoveredObject.material.color.getHex();
+      hoveredObject.material.color.set(0xffff00); // Highlight color (yellow)
+    }
+  } else if (hoveredObject) {
+    // Reset if no object is hovered
+    hoveredObject.material.emissiveIntensity = hoveredObject.material.originalEmissiveIntensity || 1;
+    hoveredObject.material.color.set(hoveredObject.material.originalColor || 0xffffff);
+    hoveredObject = null;
+  }
+}
+
+// Handle mouse clicks
 function onMouseClick(event) {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
   raycaster.setFromCamera(mouse, camera);
 
+  // Check intersections for clicks
   const intersects = raycaster.intersectObjects(orbitPivot.children);
   if (intersects.length > 0) {
     const clickedObject = intersects[0].object;
@@ -208,6 +248,8 @@ function onMouseClick(event) {
   }
 }
 
+// Attach event listeners
+window.addEventListener('mousemove', onMouseMove);
 window.addEventListener('click', onMouseClick);
 
 // Animation Loop
