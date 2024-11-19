@@ -270,16 +270,16 @@ function addPlanet(distance, size, color, speed) {
 }
 
 // Add random planets
-const numPlanets = 20; // Number of planets
+const numPlanets = 30; // Number of planets
 for (let i = 0; i < numPlanets; i++) {
   const distance = THREE.MathUtils.randFloat(15, 50); // Random distance
-  const size = THREE.MathUtils.randFloat(1, 3); // Random size
+  const size = THREE.MathUtils.randFloat(1, 4); // Random size
   const color = new THREE.Color(
     Math.random(),
     Math.random(),
     Math.random()
   ); // Random color
-  const speed = THREE.MathUtils.randFloat(0.005, 0.0001); // Random speed
+  const speed = THREE.MathUtils.randFloat(0.0025, 0.001); // Random speed
   addPlanet(distance, size, color, speed); // Negative speed for reverse spinning
 }
 
@@ -293,7 +293,7 @@ function animate() {
   requestAnimationFrame(animate);
 
   // Rotate the pivot for orbiting effect
-  orbitPivot.rotation.y += 0.005;
+  //orbitPivot.rotation.y += 0.0005;
 
   // Rotate individual planets around the pivot
   planets.forEach((planet) => {
