@@ -245,16 +245,70 @@ function onMouseMove(event) {
   }
 }
 
+
+//add planets
+const planets = [];
+function addPlanet(distance, size, color, speed) {
+  const geometry = new THREE.SphereGeometry(size, 32, 32);
+  const material = new THREE.MeshStandardMaterial({
+    color: color,
+    emissive: color,
+    emissiveIntensity: 0.5,
+    metalness: 0.5,
+    roughness: 0.8,
+  });
+  const planet = new THREE.Mesh(geometry, material);
+
+  // Set the planet's initial position
+  const angle = Math.random() * Math.PI * 2; // Random angle for initial position
+  planet.position.set(distance * Math.cos(angle), 0, distance * Math.sin(angle));
+  planet.userData = { angle: angle, speed: -speed, distance: 35 + distance }; // Negative speed for reverse direction
+
+  // Add the planet to the orbitPivot
+  orbitPivot.add(planet);
+  planets.push(planet);
+}
+
+// Add random planets
+const numPlanets = 20; // Number of planets
+for (let i = 0; i < numPlanets; i++) {
+  const distance = THREE.MathUtils.randFloat(15, 50); // Random distance
+  const size = THREE.MathUtils.randFloat(1, 3); // Random size
+  const color = new THREE.Color(
+    Math.random(),
+    Math.random(),
+    Math.random()
+  ); // Random color
+  const speed = THREE.MathUtils.randFloat(0.005, 0.0001); // Random speed
+  addPlanet(distance, size, color, speed); // Negative speed for reverse spinning
+}
+
 // Attach hover and click event listeners
 window.addEventListener('mousemove', onMouseMove);
 window.addEventListener('click', onMouseClick);
 
 // Animation Loop
+// Animation Loop
 function animate() {
   requestAnimationFrame(animate);
 
   // Rotate the pivot for orbiting effect
-  orbitPivot.rotation.y += 0.01;
+  orbitPivot.rotation.y += 0.005;
+
+  // Rotate individual planets around the pivot
+  planets.forEach((planet) => {
+    const { angle, speed, distance } = planet.userData;
+
+    // Update angle
+    planet.userData.angle += speed;
+
+    // Update position based on updated angle
+    planet.position.set(
+      distance * Math.cos(planet.userData.angle),
+      0,
+      distance * Math.sin(planet.userData.angle)
+    );
+  });
 
   // Individual rotations
   happy.rotation.y += 0.025;
@@ -274,6 +328,8 @@ function animate() {
   controls.update();
   composer.render();
 }
+
+animate();
 
 function moveCamera() {
   const t = document.body.getBoundingClientRect().top;
