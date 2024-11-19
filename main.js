@@ -13,10 +13,10 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 camera.position.setZ(30);
 
 // Lights
-const pointLight = new THREE.PointLight(0xffffff, 2); // Increase intensity to 2
+const pointLight = new THREE.PointLight(0xffffff, 2);
 pointLight.position.set(20, 20, 20);
 
-const ambLight = new THREE.AmbientLight(0xffffff, 0.2); // Slightly dimmer ambient light
+const ambLight = new THREE.AmbientLight(0xffffff, 0.2);
 scene.add(pointLight, ambLight);
 
 // Helpers
@@ -31,15 +31,17 @@ const controls = new OrbitControls(camera, renderer.domElement);
 function addStar() {
   const geometry = new THREE.SphereGeometry(0.125);
   const material = new THREE.MeshStandardMaterial({
-    color: 0xffffff, // Bright white color
-    emissive: 0xffffff, // Bright white glow
-    emissiveIntensity: 3, // Increase emissive intensity for brightness
-    metalness: 0.5, // Add some reflectivity
-    roughness: 0.1, // Reduce roughness for a shinier look
+    color: 0xffffff,
+    emissive: 0xffffff,
+    emissiveIntensity: 3,
+    metalness: 0.5,
+    roughness: 0.1,
   });
   const star = new THREE.Mesh(geometry, material);
 
-  const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(100));
+  const [x, y, z] = Array(3)
+    .fill()
+    .map(() => THREE.MathUtils.randFloatSpread(100));
   star.position.set(x, y, z);
   scene.add(star);
 }
@@ -53,41 +55,38 @@ scene.background = spaceTexture;
 const geometry = new THREE.TorusGeometry(10, 3, 16, 100);
 const material = new THREE.MeshStandardMaterial({
   color: 0xff6347,
-  emissive: 0xff4500, // Add emissive to make the torus glow
+  emissive: 0xff4500,
   emissiveIntensity: 0.8,
-  metalness: 0.7, // Add metallic effect for a shiny look
-  roughness: 0.3, // Reduce roughness for a polished look
+  metalness: 0.7,
+  roughness: 0.3,
 });
 const torus = new THREE.Mesh(geometry, material);
-
 scene.add(torus);
+
+// Create a pivot for orbiting objects
+const orbitPivot = new THREE.Object3D();
+scene.add(orbitPivot);
 
 // Smile Sphere
 const smileTexture = new THREE.TextureLoader().load('smile.jpg');
-smileTexture.repeat.set(1, 1); // Scale down the texture
-smileTexture.wrapS = THREE.RepeatWrapping; // Enable repeating horizontally
-smileTexture.wrapT = THREE.RepeatWrapping; // Enable repeating vertically
 const happy = new THREE.Mesh(
   new THREE.SphereGeometry(5, 64, 64),
   new THREE.MeshBasicMaterial({ map: smileTexture, side: THREE.DoubleSide })
 );
-happy.position.z = 30;
-happy.position.setX(-10);
-scene.add(happy);
+happy.name = 'Happy'; // Add a name for identification
+happy.position.set(30, 0, 0); // Position relative to the pivot
+orbitPivot.add(happy);
 
 // Add 3D Heart
 const heartShape = new THREE.Shape();
-
-// Define the heart's 2D shape
 heartShape.moveTo(0, 0);
 heartShape.bezierCurveTo(0, -5, 5, -5, 5, 0);
 heartShape.bezierCurveTo(5, 5, 0, 5, 0, 10);
 heartShape.bezierCurveTo(0, 5, -5, 5, -5, 0);
 heartShape.bezierCurveTo(-5, -5, 0, -5, 0, 0);
 
-// Extrude the heart into 3D
 const heartGeometry = new THREE.ExtrudeGeometry(heartShape, {
-  depth: 2, // Thickness of the heart
+  depth: 2,
   bevelEnabled: true,
   bevelThickness: 0.5,
   bevelSize: 0.5,
@@ -95,23 +94,133 @@ const heartGeometry = new THREE.ExtrudeGeometry(heartShape, {
 });
 
 const heartMaterial = new THREE.MeshStandardMaterial({
-  color: 0xff0000, // Red color
-  emissive: 0xff4444, // Bright red glow
-  emissiveIntensity: 1.5, // Increase brightness of the glow
-  metalness: 0.3, // Slight metallic shine
-  roughness: 0.5, // Reduce roughness for a polished look
+  color: 0xff0000,
+  emissive: 0xff4444,
+  emissiveIntensity: 1.5,
+  metalness: 0.3,
+  roughness: 0.5,
 });
 
 const heart = new THREE.Mesh(heartGeometry, heartMaterial);
-heart.position.set(10, 5, 0); // Position the heart
-heart.rotation.z = Math.PI; // Flip upside down on the z-axis
-scene.add(heart);
+heart.name = 'Heart'; // Add a name for identification
+heart.position.set(0, 0, 30); // Flat position relative to the pivot
+heart.rotation.x = Math.PI; // Flip the heart 180 degrees along the x-axis
+orbitPivot.add(heart);
+
+// Add Crown
+const crownShape = new THREE.Shape();
+crownShape.moveTo(-6, 0);
+crownShape.lineTo(-5, 5);
+crownShape.lineTo(-2, 2);
+crownShape.lineTo(0, 7);
+crownShape.lineTo(2, 2);
+crownShape.lineTo(5, 5);
+crownShape.lineTo(6, 0);
+crownShape.lineTo(-6, 0);
+
+const crownGeometry = new THREE.ExtrudeGeometry(crownShape, {
+  depth: 1,
+  bevelEnabled: true,
+  bevelThickness: 0.2,
+  bevelSize: 0.2,
+  bevelSegments: 2,
+});
+
+const crownMaterial = new THREE.MeshStandardMaterial({
+  color: 0xffd700,
+  emissive: 0xffaa00,
+  emissiveIntensity: 1.2,
+  metalness: 0.6,
+  roughness: 0.3,
+});
+
+const crown = new THREE.Mesh(crownGeometry, crownMaterial);
+crown.name = 'Crown'; // Add a name for identification
+crown.position.set(-30, -2.5, 0); // Flat position relative to the pivot
+orbitPivot.add(crown);
+
+// Add Spade
+const spadeShape = new THREE.Shape();
+spadeShape.moveTo(0, -5);
+spadeShape.quadraticCurveTo(-6, -3, 0, 5);
+spadeShape.quadraticCurveTo(6, -3, 0, -5);
+spadeShape.moveTo(-2, -5);
+spadeShape.lineTo(-1, -7);
+spadeShape.lineTo(1, -7);
+spadeShape.lineTo(2, -5);
+
+const spadeGeometry = new THREE.ExtrudeGeometry(spadeShape, {
+  depth: 1,
+  bevelEnabled: true,
+  bevelThickness: 0.2,
+  bevelSize: 0.2,
+  bevelSegments: 2,
+});
+
+const spadeMaterial = new THREE.MeshStandardMaterial({
+  color: 0x000000,
+  emissive: 0x333333,
+  emissiveIntensity: 1.0,
+  metalness: 0.2,
+  roughness: 0.7,
+});
+
+const spade = new THREE.Mesh(spadeGeometry, spadeMaterial);
+spade.name = 'Spade'; // Add a name for identification
+spade.position.set(0, 0, -30); // Flat position relative to the pivot
+orbitPivot.add(spade);
+
+// Raycaster for detecting clicks
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+function onMouseClick(event) {
+  // Calculate mouse position in normalized device coordinates (-1 to +1)
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  // Update the raycaster
+  raycaster.setFromCamera(mouse, camera);
+
+  // Check intersections
+  const intersects = raycaster.intersectObjects(orbitPivot.children);
+  if (intersects.length > 0) {
+    const clickedObject = intersects[0].object;
+    console.log(`You clicked on ${clickedObject.name}`);
+    // Add custom actions for each object here
+    switch (clickedObject.name) {
+      case 'Happy':
+        alert('You clicked on the Smile Sphere!');
+        break;
+      case 'Heart':
+        alert('You clicked on the Heart!');
+        break;
+      case 'Crown':
+        alert('You clicked on the Crown!');
+        break;
+      case 'Spade':
+        alert('You clicked on the Spade!');
+        break;
+    }
+  }
+}
+
+window.addEventListener('click', onMouseClick);
 
 // Animation Loop
 function animate() {
   requestAnimationFrame(animate);
-  torus.rotation.y += 0.01; // Rotate along the Y-axis
-  heart.rotation.y += 0.01; // Rotate the heart
+
+  // Rotate the pivot for orbiting effect
+  orbitPivot.rotation.y += 0.01;
+
+  // Individual rotations
+  happy.rotation.y += 0.025;
+  heart.rotation.y += 0.025;
+  crown.rotation.y += 0.025;
+  spade.rotation.y += 0.025;
+
+  torus.rotation.y += 0.01;
   controls.update();
   renderer.render(scene, camera);
 }
@@ -119,13 +228,10 @@ function animate() {
 function moveCamera() {
   const t = document.body.getBoundingClientRect().top;
 
-  // Rotate the happy face
-  happy.rotation.y += 0.1;
-
-  // Smoothly adjust camera position and limit rotation values to prevent flipping
-  camera.position.z = Math.max(10, 30 + t * -0.01); // Ensure z-position doesn't go below 10
-  camera.position.x = THREE.MathUtils.clamp(t * -0.0002, -5, 5); // Limit x-position movement
-  camera.rotation.y = THREE.MathUtils.clamp(t * -0.0002, -Math.PI / 4, Math.PI / 4); // Limit rotation to prevent flipping
+  orbitPivot.rotation.y += t * -0.0001; // Orbit with scroll
+  camera.position.z = Math.max(10, 30 + t * -0.01);
+  camera.position.x = THREE.MathUtils.clamp(t * -0.0002, -5, 5);
+  camera.rotation.y = THREE.MathUtils.clamp(t * -0.0002, -Math.PI / 4, Math.PI / 4);
 }
 
 document.body.onscroll = moveCamera;
