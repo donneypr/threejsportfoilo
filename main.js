@@ -1,3 +1,12 @@
+
+// Updated Full Code
+import './style.css';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
+
 // Handle mouse clicks for objects
 function onMouseClick(event) {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -18,13 +27,6 @@ function onMouseClick(event) {
 // Attach click event listener
 window.addEventListener('click', onMouseClick);
 
-// Updated Full Code
-import './style.css';
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -74,7 +76,7 @@ function addStar() {
 
   scene.add(star);
 }
-Array(300).fill().forEach(addStar);
+Array(500).fill().forEach(addStar);
 
 // Background Texture
 const spaceTexture = new THREE.TextureLoader().load('background.jpg');
