@@ -27,7 +27,9 @@ scene.add(lightHelper, gridHelper);
 // Orbit Controls
 const controls = new OrbitControls(camera, renderer.domElement);
 
-// Add Stars
+// Array to store stars and their initial positions
+const stars = [];
+
 function addStar() {
   const geometry = new THREE.SphereGeometry(0.125);
   const material = new THREE.MeshStandardMaterial({
@@ -43,8 +45,13 @@ function addStar() {
     .fill()
     .map(() => THREE.MathUtils.randFloatSpread(100));
   star.position.set(x, y, z);
+
+  // Store the star and its initial Y position for the breathing effect
+  stars.push({ mesh: star, initialY: y });
+
   scene.add(star);
 }
+
 Array(300).fill().forEach(addStar);
 
 // Background Texture
@@ -73,8 +80,8 @@ const happy = new THREE.Mesh(
   new THREE.SphereGeometry(5, 64, 64),
   new THREE.MeshBasicMaterial({ map: smileTexture, side: THREE.DoubleSide })
 );
-happy.name = 'Happy'; // Add a name for identification
-happy.position.set(30, 0, 0); // Position relative to the pivot
+happy.name = 'Happy';
+happy.position.set(30, 0, 0);
 orbitPivot.add(happy);
 
 // Add 3D Heart
@@ -102,9 +109,9 @@ const heartMaterial = new THREE.MeshStandardMaterial({
 });
 
 const heart = new THREE.Mesh(heartGeometry, heartMaterial);
-heart.name = 'Heart'; // Add a name for identification
-heart.position.set(0, 0, 30); // Flat position relative to the pivot
-heart.rotation.x = Math.PI; // Flip the heart 180 degrees along the x-axis
+heart.name = 'Heart';
+heart.position.set(0, 0, 30);
+heart.rotation.x = Math.PI;
 orbitPivot.add(heart);
 
 // Add Crown
@@ -135,8 +142,8 @@ const crownMaterial = new THREE.MeshStandardMaterial({
 });
 
 const crown = new THREE.Mesh(crownGeometry, crownMaterial);
-crown.name = 'Crown'; // Add a name for identification
-crown.position.set(-30, -2.5, 0); // Flat position relative to the pivot
+crown.name = 'Crown';
+crown.position.set(-30, -2.5, 0);
 orbitPivot.add(crown);
 
 // Add Spade
@@ -166,8 +173,8 @@ const spadeMaterial = new THREE.MeshStandardMaterial({
 });
 
 const spade = new THREE.Mesh(spadeGeometry, spadeMaterial);
-spade.name = 'Spade'; // Add a name for identification
-spade.position.set(0, 0, -30); // Flat position relative to the pivot
+spade.name = 'Spade';
+spade.position.set(0, 0, -30);
 orbitPivot.add(spade);
 
 // Raycaster for detecting clicks
@@ -175,19 +182,15 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 function onMouseClick(event) {
-  // Calculate mouse position in normalized device coordinates (-1 to +1)
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-  // Update the raycaster
   raycaster.setFromCamera(mouse, camera);
 
-  // Check intersections
   const intersects = raycaster.intersectObjects(orbitPivot.children);
   if (intersects.length > 0) {
     const clickedObject = intersects[0].object;
     console.log(`You clicked on ${clickedObject.name}`);
-    // Add custom actions for each object here
     switch (clickedObject.name) {
       case 'Happy':
         alert('You clicked on the Smile Sphere!');
@@ -220,6 +223,14 @@ function animate() {
   crown.rotation.y += 0.025;
   spade.rotation.y += 0.025;
 
+  // Stars breathing effect
+  const time = Date.now() * 0.001;
+  stars.forEach(({ mesh, initialY }, index) => {
+    const amplitude = 0.5;
+    const frequency = 1;
+    mesh.position.y = initialY + Math.sin(time * frequency + index * 0.1) * amplitude;
+  });
+
   torus.rotation.y += 0.01;
   controls.update();
   renderer.render(scene, camera);
@@ -228,7 +239,7 @@ function animate() {
 function moveCamera() {
   const t = document.body.getBoundingClientRect().top;
 
-  orbitPivot.rotation.y += t * -0.0001; // Orbit with scroll
+  orbitPivot.rotation.y += t * -0.0001;
   camera.position.z = Math.max(10, 30 + t * -0.01);
   camera.position.x = THREE.MathUtils.clamp(t * -0.0002, -5, 5);
   camera.rotation.y = THREE.MathUtils.clamp(t * -0.0002, -Math.PI / 4, Math.PI / 4);
