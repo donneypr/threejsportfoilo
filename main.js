@@ -249,25 +249,26 @@ function onMouseMove(event) {
 
 const textureLoader = new THREE.TextureLoader();
 const planetTextures = [
-  textureLoader.load('mercury.jpg'),
-  textureLoader.load('venus.jpg'),
-  textureLoader.load('earth.jpg'),
-  textureLoader.load('mars.jpg'),
-  textureLoader.load('jupiter.jpg'),
-  textureLoader.load('saturn.jpg'),
-  textureLoader.load('uranus.jpg'),
+  textureLoader.load('mercury.jpg'), // Mercury
+  textureLoader.load('venus.jpg'),   // Venus
+  textureLoader.load('earth.jpg'),   // Earth
+  textureLoader.load('mars.jpg'),    // Mars
+  textureLoader.load('jupiter.jpg'), // Jupiter
+  textureLoader.load('saturn.jpg'),  // Saturn
+  textureLoader.load('uranus.jpg'),  // Uranus
+  textureLoader.load('neptune.jpg'), // Neptune
 ];
+
+// Load the ring texture for Saturn
+const saturnRingTexture = textureLoader.load('saturn_ring.jpg');
 
 // Add planets
 const planets = [];
-function addPlanet(distance, size, speed) {
+function addPlanet(distance, size, speed, texture, hasRing = false) {
   const geometry = new THREE.SphereGeometry(size, 32, 32);
 
-  // Randomly select a texture for the planet
-  const randomTexture = planetTextures[Math.floor(Math.random() * planetTextures.length)];
-  
   const material = new THREE.MeshStandardMaterial({
-    map: randomTexture, // Apply the selected texture
+    map: texture, // Apply the texture
     emissive: 0x333333, // Add slight emissive glow
     emissiveIntensity: 0.7,
     metalness: 0.5,
@@ -279,21 +280,50 @@ function addPlanet(distance, size, speed) {
   // Set the planet's initial position
   const angle = Math.random() * Math.PI * 2; // Random angle for initial position
   planet.position.set(distance * Math.cos(angle), 0, distance * Math.sin(angle));
-  planet.userData = { angle: angle, speed: speed, distance: 35 + distance };
+  planet.userData = { angle: angle, speed: speed, distance: distance + 35};
+
+  // If the planet has a ring, add it
+  if (hasRing) {
+    addRealisticRing(planet, size + 2, size + 4, saturnRingTexture); // Add realistic textured ring
+  }
 
   // Add the planet to the orbitPivot
   orbitPivot.add(planet);
   planets.push(planet);
 }
 
-// Add random planets with textures
-const numPlanets = 8; // Number of planets
-for (let i = 0; i < numPlanets; i++) {
-  const distance = THREE.MathUtils.randFloat(15, 50); // Random distance
-  const size = THREE.MathUtils.randFloat(1, 4); // Random size
-  const speed = THREE.MathUtils.randFloat(0.0025, 0.001); // Random speed
-  addPlanet(distance, size, speed); // Add planet
+// Function to add a textured ring around a planet
+function addRealisticRing(planet, innerRadius, outerRadius, texture) {
+  const ringGeometry = new THREE.RingGeometry(innerRadius, outerRadius, 64);
+  
+  // Rotate UV mapping for proper alignment
+  const uvMapping = ringGeometry.attributes.uv;
+  for (let i = 0; i < uvMapping.count; i++) {
+    uvMapping.setXY(i, uvMapping.getX(i), uvMapping.getY(i) - 0.5);
+  }
+
+  const ringMaterial = new THREE.MeshBasicMaterial({
+    map: texture, // Apply the texture
+    transparent: true, // Ensure transparency
+    opacity: 0.8, // Adjust for subtle blending
+    side: THREE.DoubleSide, // Visible from both sides
+  });
+
+  const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+  ring.rotation.x = Math.PI / 2; // Rotate the ring to align with the planet's axis
+  planet.add(ring); // Attach the ring to the planet
 }
+
+// Add planets with textures in the correct solar system order
+addPlanet(15, 0.4, 0.0025, planetTextures[0]); // Mercury
+addPlanet(25, 0.95, 0.002, planetTextures[1]); // Venus
+addPlanet(35, 1.0, 0.0018, planetTextures[2]); // Earth
+addPlanet(45, 0.53, 0.0015, planetTextures[3]); // Mars
+addPlanet(60, 11.0, 0.0012, planetTextures[4]); // Jupiter
+addPlanet(80, 9.5, 0.001, planetTextures[5], true); // Saturn with a realistic ring
+addPlanet(100, 4.0, 0.0008, planetTextures[6]); // Uranus
+addPlanet(120, 3.9, 0.0007, planetTextures[7]); // Neptune
+
 
 // Attach hover and click event listeners
 window.addEventListener('mousemove', onMouseMove);
