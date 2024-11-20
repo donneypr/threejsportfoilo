@@ -67,14 +67,14 @@ function addStar() {
 
   const [x, y, z] = Array(3)
     .fill()
-    .map(() => THREE.MathUtils.randFloatSpread(100));
+    .map(() => THREE.MathUtils.randFloatSpread(350));
   star.position.set(x, y, z);
 
   stars.push({ mesh: star, initialY: y });
 
   scene.add(star);
 }
-Array(500).fill().forEach(addStar);
+Array(1000).fill().forEach(addStar);
 
 // Background Texture
 const spaceTexture = new THREE.TextureLoader().load('background.jpg');
