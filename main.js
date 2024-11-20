@@ -1,5 +1,4 @@
 
-// Updated Full Code
 import './style.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -289,13 +288,140 @@ for (let i = 0; i < numPlanets; i++) {
 window.addEventListener('mousemove', onMouseMove);
 window.addEventListener('click', onMouseClick);
 
-// Animation Loop
+// Comet
+const cometGeometry = new THREE.SphereGeometry(0.5, 32, 32); // Small comet
+const cometMaterial = new THREE.MeshStandardMaterial({
+  color: 0xffffff,
+  emissive: 0xffffff,
+  emissiveIntensity: 2,
+  metalness: 0.3,
+  roughness: 0.2,
+});
+const comet = new THREE.Mesh(cometGeometry, cometMaterial);
+scene.add(comet);
+
+// Create the comet trail
+const trailGeometry = new THREE.BufferGeometry();
+const trailParticles = 50; // Number of particles in the trail
+const trailPositions = new Float32Array(trailParticles * 3); // x, y, z for each particle
+trailGeometry.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+
+// Use PointsMaterial with blending for a glowing effect
+const trailMaterial = new THREE.PointsMaterial({
+  color: 0xffffff,
+  size: 0.3,
+  transparent: true,
+  opacity: 0.8,
+  blending: THREE.AdditiveBlending, // Additive blending for glow
+  depthWrite: false, // Prevent depth conflicts for blending
+});
+const trail = new THREE.Points(trailGeometry, trailMaterial);
+scene.add(trail);
+
+// Define the comet's elliptical orbital path
+let cometAngle = 0; // Angle for its elliptical path
+const cometSemiMajorAxis = 80; // Semi-major axis of the ellipse
+const cometSemiMinorAxis = 50; // Semi-minor axis of the ellipse
+const cometSpeed = 0.005; // Speed of movement
+
+function updateComet() {
+  // Update comet's position along an elliptical orbit
+  cometAngle += cometSpeed;
+  comet.position.set(
+    cometSemiMajorAxis * Math.cos(cometAngle), // Elliptical x-coordinate
+    15, // Height above the sun
+    cometSemiMinorAxis * Math.sin(cometAngle) // Elliptical z-coordinate
+  );
+
+  // Update the trail to follow the comet
+  const trailPositions = trail.geometry.attributes.position.array;
+  for (let i = trailParticles - 1; i > 0; i--) {
+    // Shift each particle's position back to the previous one
+    trailPositions[i * 3] = trailPositions[(i - 1) * 3];
+    trailPositions[i * 3 + 1] = trailPositions[(i - 1) * 3 + 1];
+    trailPositions[i * 3 + 2] = trailPositions[(i - 1) * 3 + 2];
+  }
+
+  // Set the trail's leading particle to the comet's position
+  trailPositions[0] = comet.position.x;
+  trailPositions[1] = comet.position.y;
+  trailPositions[2] = comet.position.z;
+
+  // Mark the trail geometry for update
+  trail.geometry.attributes.position.needsUpdate = true;
+}
+
+// Second Comet
+const tiltedCometGeometry = new THREE.SphereGeometry(0.5, 32, 32); // Small comet
+const tiltedCometMaterial = new THREE.MeshStandardMaterial({
+  color: 0xffffff, // A different color for the second comet
+  emissive: 0xffffff,
+  emissiveIntensity: 2,
+  metalness: 0.3,
+  roughness: 0.2,
+});
+const tiltedComet = new THREE.Mesh(tiltedCometGeometry, tiltedCometMaterial);
+scene.add(tiltedComet);
+
+// Create the tilted comet trail
+const tiltedTrailGeometry = new THREE.BufferGeometry();
+const tiltedTrailParticles = 50; // Number of particles in the trail
+const tiltedTrailPositions = new Float32Array(tiltedTrailParticles * 3); // x, y, z for each particle
+tiltedTrailGeometry.setAttribute('position', new THREE.BufferAttribute(tiltedTrailPositions, 3));
+
+// Use PointsMaterial with blending for a glowing effect
+const tiltedTrailMaterial = new THREE.PointsMaterial({
+  color: 0xffffff,
+  size: 0.3,
+  transparent: true,
+  opacity: 0.8,
+  blending: THREE.AdditiveBlending, // Additive blending for glow
+  depthWrite: false, // Prevent depth conflicts for blending
+});
+const tiltedTrail = new THREE.Points(tiltedTrailGeometry, tiltedTrailMaterial);
+scene.add(tiltedTrail);
+
+// Define the tilted comet's elliptical orbital path
+let tiltedCometAngle = 0; // Angle for its elliptical path
+const tiltedCometSemiMajorAxis = 90; // Semi-major axis of the ellipse
+const tiltedCometSemiMinorAxis = 60; // Semi-minor axis of the ellipse
+const tiltedCometSpeed = 0.004; // Speed of movement
+const tiltAngle = Math.PI / 6; // Tilt angle (30 degrees)
+
+// Function to update the tilted comet and its trail
+function updateTiltedComet() {
+  // Update tilted comet's position along an elliptical orbit with tilt
+  tiltedCometAngle += tiltedCometSpeed;
+  tiltedComet.position.set(
+    tiltedCometSemiMajorAxis * Math.cos(tiltedCometAngle), // Elliptical x-coordinate
+    15 + tiltedCometSemiMinorAxis * Math.sin(tiltedCometAngle) * Math.sin(tiltAngle), // Add tilt in y-coordinate
+    tiltedCometSemiMinorAxis * Math.sin(tiltedCometAngle) * Math.cos(tiltAngle) // Tilted z-coordinate
+  );
+
+  // Update the tilted trail to follow the comet
+  const tiltedTrailPositions = tiltedTrail.geometry.attributes.position.array;
+  for (let i = tiltedTrailParticles - 1; i > 0; i--) {
+    // Shift each particle's position back to the previous one
+    tiltedTrailPositions[i * 3] = tiltedTrailPositions[(i - 1) * 3];
+    tiltedTrailPositions[i * 3 + 1] = tiltedTrailPositions[(i - 1) * 3 + 1];
+    tiltedTrailPositions[i * 3 + 2] = tiltedTrailPositions[(i - 1) * 3 + 2];
+  }
+
+  // Set the trail's leading particle to the comet's position
+  tiltedTrailPositions[0] = tiltedComet.position.x;
+  tiltedTrailPositions[1] = tiltedComet.position.y;
+  tiltedTrailPositions[2] = tiltedComet.position.z;
+
+  // Mark the tilted trail geometry for update
+  tiltedTrail.geometry.attributes.position.needsUpdate = true;
+}
+
 // Animation Loop
 function animate() {
   requestAnimationFrame(animate);
 
   // Rotate the pivot for orbiting effect
-  //orbitPivot.rotation.y += 0.0005;
+  // orbitPivot.rotation.y += 0.0005;
 
   // Rotate individual planets around the pivot
   planets.forEach((planet) => {
@@ -311,6 +437,11 @@ function animate() {
       distance * Math.sin(planet.userData.angle)
     );
   });
+
+  // Update the comet and its trail
+  updateComet();
+  updateTiltedComet();
+
 
   // Individual rotations
   happy.rotation.y += 0.025;
@@ -330,6 +461,7 @@ function animate() {
   controls.update();
   composer.render();
 }
+
 
 function moveCamera() {
   const t = document.body.getBoundingClientRect().top;
