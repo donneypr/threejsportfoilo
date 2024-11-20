@@ -71,7 +71,6 @@ function addStar() {
     .map(() => THREE.MathUtils.randFloatSpread(100));
   star.position.set(x, y, z);
 
-  // Store the star and its initial Y position for the breathing effect
   stars.push({ mesh: star, initialY: y });
 
   scene.add(star);
@@ -82,17 +81,18 @@ Array(500).fill().forEach(addStar);
 const spaceTexture = new THREE.TextureLoader().load('background.jpg');
 scene.background = spaceTexture;
 
-// Torus
-const geometry = new THREE.TorusGeometry(10, 3, 16, 100);
-const material = new THREE.MeshStandardMaterial({
-  color: 0xff6347,
-  emissive: 0xff4500,
-  emissiveIntensity: 0.8,
-  metalness: 0.7,
-  roughness: 0.3,
+const sunTexture = new THREE.TextureLoader().load('sun.jpg');
+
+const sunGeometry = new THREE.SphereGeometry(10, 64, 64); // Sphere with radius 10 and high resolution
+const sunMaterial = new THREE.MeshStandardMaterial({
+  map: sunTexture, // Apply the sun texture
+  emissive: 0xffa500, // Add an emissive glow (orange-like)
+  emissiveIntensity: 1.5, // Increase glow intensity
+  metalness: 0.5, // Slight metallic effect
+  roughness: 0.3, // Moderate roughness
 });
-const torus = new THREE.Mesh(geometry, material);
-scene.add(torus);
+const sunSphere = new THREE.Mesh(sunGeometry, sunMaterial);
+scene.add(sunSphere);
 
 // Create a pivot for orbiting objects
 const orbitPivot = new THREE.Object3D();
@@ -326,12 +326,10 @@ function animate() {
     mesh.position.y = initialY + Math.sin(time * frequency + index * 0.1) * amplitude;
   });
 
-  torus.rotation.y += 0.01;
+  sunSphere.rotation.y += 0.01;
   controls.update();
   composer.render();
 }
-
-animate();
 
 function moveCamera() {
   const t = document.body.getBoundingClientRect().top;
