@@ -39,9 +39,9 @@ camera.position.setZ(30);
 
 // Lights
 const pointLight = new THREE.PointLight(0xffffff, 5); // Adjusted for more brightness
-pointLight.position.set(20, 20, 20);
+pointLight.position.set(40, 40, 40);
 
-const ambLight = new THREE.AmbientLight(0xffffff, 0.5); // Adjusted for softer overall brightness
+const ambLight = new THREE.AmbientLight(0xffffff, 5); // Adjusted for softer overall brightness
 scene.add(pointLight, ambLight);
 
 // Helpers
@@ -247,41 +247,52 @@ function onMouseMove(event) {
 }
 
 
-//add planets
+const textureLoader = new THREE.TextureLoader();
+const planetTextures = [
+  textureLoader.load('mercury.jpg'),
+  textureLoader.load('venus.jpg'),
+  textureLoader.load('earth.jpg'),
+  textureLoader.load('mars.jpg'),
+  textureLoader.load('jupiter.jpg'),
+  textureLoader.load('saturn.jpg'),
+  textureLoader.load('uranus.jpg'),
+];
+
+// Add planets
 const planets = [];
-function addPlanet(distance, size, color, speed) {
+function addPlanet(distance, size, speed) {
   const geometry = new THREE.SphereGeometry(size, 32, 32);
+
+  // Randomly select a texture for the planet
+  const randomTexture = planetTextures[Math.floor(Math.random() * planetTextures.length)];
+  
   const material = new THREE.MeshStandardMaterial({
-    color: color,
-    emissive: color,
-    emissiveIntensity: 0.5,
+    map: randomTexture, // Apply the selected texture
+    emissive: 0x333333, // Add slight emissive glow
+    emissiveIntensity: 0.7,
     metalness: 0.5,
     roughness: 0.8,
   });
+
   const planet = new THREE.Mesh(geometry, material);
 
   // Set the planet's initial position
   const angle = Math.random() * Math.PI * 2; // Random angle for initial position
   planet.position.set(distance * Math.cos(angle), 0, distance * Math.sin(angle));
-  planet.userData = { angle: angle, speed: -speed, distance: 35 + distance }; // Negative speed for reverse direction
+  planet.userData = { angle: angle, speed: speed, distance: 35 + distance };
 
   // Add the planet to the orbitPivot
   orbitPivot.add(planet);
   planets.push(planet);
 }
 
-// Add random planets
-const numPlanets = 30; // Number of planets
+// Add random planets with textures
+const numPlanets = 8; // Number of planets
 for (let i = 0; i < numPlanets; i++) {
   const distance = THREE.MathUtils.randFloat(15, 50); // Random distance
   const size = THREE.MathUtils.randFloat(1, 4); // Random size
-  const color = new THREE.Color(
-    Math.random(),
-    Math.random(),
-    Math.random()
-  ); // Random color
   const speed = THREE.MathUtils.randFloat(0.0025, 0.001); // Random speed
-  addPlanet(distance, size, color, speed); // Negative speed for reverse spinning
+  addPlanet(distance, size, speed); // Add planet
 }
 
 // Attach hover and click event listeners
