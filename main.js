@@ -6,7 +6,9 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 
-// Handle mouse clicks for objects
+
+
+
 function onMouseClick(event) {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -14,18 +16,113 @@ function onMouseClick(event) {
   raycaster.setFromCamera(mouse, camera);
 
   // Check intersections for clicks
-  const intersects = raycaster.intersectObjects(orbitPivot.children); // Check orbitPivot's children
+  const intersects = raycaster.intersectObjects([...orbitPivot.children, distantPlanet]); // Include distantPlanet in objects
   if (intersects.length > 0) {
     const clickedObject = intersects[0].object;
 
-    // Display a popup message with the object's name
-    alert(`Clicked on ${clickedObject.name}`);
+    // Check if the clicked object is the "Happy" object
+    if (clickedObject.name === 'Happy') {
+      moveToDistantPlanet(); // Move to the distant planet
+    }
   }
 }
 
-// Attach click event listener
-window.addEventListener('click', onMouseClick);
+function moveToDistantPlanet() {
+  const duration = 5; // Duration of the camera transition
 
+  // Get the position of the distant planet
+  const targetPosition = new THREE.Vector3();
+  distantPlanet.getWorldPosition(targetPosition);
+
+  // Offset for the camera's final position (adjusted for a perfect face-on view of the planet)
+  const offset = new THREE.Vector3(37.5, 25, -87.5);
+  const newCameraPosition = targetPosition.clone().add(offset);
+
+  // Create the star tunnel geometry
+  const starGeometry = new THREE.BufferGeometry();
+  const starCount = 2000; // Number of stars in the tunnel
+  const starPositions = new Float32Array(starCount * 3);
+
+  // Calculate the direction vector from the current camera position to the distant planet
+  const startPosition = camera.position.clone();
+  const direction = newCameraPosition.clone().sub(startPosition).normalize();
+
+  const tunnelRadius = 300; // Radius of the star tunnel
+
+  // Distribute stars along the camera path
+  for (let i = 0; i < starCount; i++) {
+    const t = Math.random(); // Random factor for distance along the path
+    const pointOnPath = startPosition
+      .clone()
+      .add(direction.clone().multiplyScalar(t * newCameraPosition.distanceTo(startPosition)));
+
+    // Spread stars around the path (wider cylindrical distribution)
+    starPositions[i * 3] = pointOnPath.x + THREE.MathUtils.randFloatSpread(tunnelRadius); // Spread in x
+    starPositions[i * 3 + 1] = pointOnPath.y + THREE.MathUtils.randFloatSpread(tunnelRadius); // Spread in y
+    starPositions[i * 3 + 2] = pointOnPath.z + THREE.MathUtils.randFloatSpread(tunnelRadius); // Spread in z
+  }
+
+  starGeometry.setAttribute("position", new THREE.BufferAttribute(starPositions, 3));
+
+  const starMaterial = new THREE.PointsMaterial({
+    color: 0xffffff,
+    size: 2, // Slightly increase star size for better visibility
+    transparent: true,
+    opacity: 0.8,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+
+  const starEffect = new THREE.Points(starGeometry, starMaterial);
+  scene.add(starEffect);
+
+  // Smooth camera animation
+  gsap.to(camera.position, {
+    x: newCameraPosition.x,
+    y: newCameraPosition.y,
+    z: newCameraPosition.z,
+    duration: duration,
+    onUpdate: () => {
+      camera.lookAt(targetPosition); // Ensure the camera always looks at the planet
+    },
+    onComplete: () => {
+      camera.lookAt(targetPosition); // Final adjustment to face the planet
+      scene.remove(starEffect); // Remove the stars once the animation is complete
+    },
+  });
+
+  // Animate stars moving past the camera
+  gsap.to(starEffect.geometry.attributes.position.array, {
+    duration: duration,
+    onUpdate: () => {
+      const positions = starEffect.geometry.attributes.position.array;
+      for (let i = 0; i < starCount; i++) {
+        // Move stars along the direction of the camera path
+        positions[i * 3] -= direction.x * 30; // Adjust based on desired speed
+        positions[i * 3 + 1] -= direction.y * 30;
+        positions[i * 3 + 2] -= direction.z * 30;
+
+        // Recycle stars when they move past the camera
+        if (positions[i * 3 + 2] < startPosition.z) {
+          positions[i * 3] = startPosition.x + THREE.MathUtils.randFloatSpread(tunnelRadius);
+          positions[i * 3 + 1] = startPosition.y + THREE.MathUtils.randFloatSpread(tunnelRadius);
+          positions[i * 3 + 2] = startPosition.z + THREE.MathUtils.randFloat(-500, 0);
+        }
+      }
+      starEffect.geometry.attributes.position.needsUpdate = true;
+    },
+    repeat: -1, // Repeat continuously for the effect duration
+  });
+}
+
+
+
+
+
+
+
+// Add click event listener
+window.addEventListener('click', onMouseClick);
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -199,6 +296,29 @@ const spade = new THREE.Mesh(spadeGeometry, spadeMaterial);
 spade.name = 'Spade';
 spade.position.set(0, 0, -30);
 orbitPivot.add(spade);
+
+
+
+///////////////////
+
+
+//distantplanet1
+const distantPlanetTexture = new THREE.TextureLoader().load('distant_planet1.jpg');
+const distantPlanetGeometry = new THREE.SphereGeometry(15, 64, 64); // Adjust size as needed
+const distantPlanetMaterial = new THREE.MeshStandardMaterial({
+  map: distantPlanetTexture, // Use the loaded texture
+  emissive: 0x111111, // Add a slight glow
+  emissiveIntensity: 0.3,
+  metalness: 0.6,
+  roughness: 0.8,
+});
+
+const distantPlanet = new THREE.Mesh(distantPlanetGeometry, distantPlanetMaterial);
+distantPlanet.position.set(300, 200, -700); // Place it far from the origin
+scene.add(distantPlanet);
+
+
+//////////////////
 
 // Composer and OutlinePass setup
 const composer = new EffectComposer(renderer);
