@@ -86,6 +86,8 @@ function moveToDistantPlanet() {
       camera.lookAt(targetPosition); // Ensure the camera always looks at the planet
     },
     onComplete: () => {
+      showRetroPanel(); // Display the retro panel
+
       camera.lookAt(targetPosition); // Final adjustment to face the planet
       scene.remove(starEffect); // Remove the stars once the animation is complete
     },
@@ -117,7 +119,11 @@ function moveToDistantPlanet() {
 
 
 
-
+function showRetroPanel() {
+  const retroPanel = document.getElementById("retro-panel");
+  retroPanel.classList.remove("hidden");
+  retroPanel.classList.add("show");
+}
 
 
 

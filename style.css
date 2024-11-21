@@ -9,3 +9,43 @@ main {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
 }
+
+/* Retro Panel Styling */
+#retro-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  padding: 20px;
+  background: linear-gradient(to bottom, #333, #000); /* Retro gradient */
+  border: 5px solid #ffcc00; /* Retro border color */
+  box-shadow: 0 0 20px #ffcc00; /* Retro glowing effect */
+  color: #fff;
+  text-align: center;
+  font-family: 'Courier New', Courier, monospace; /* Retro font */
+  z-index: 1000;
+  opacity: 0; /* Initially hidden */
+  visibility: hidden;
+  transition: opacity 0.5s, visibility 0.5s; /* Smooth fade-in effect */
+}
+
+#retro-panel h1 {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+#retro-panel p {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+#retro-panel.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+#retro-panel.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
