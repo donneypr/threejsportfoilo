@@ -13,16 +13,119 @@ function onMouseClick(event) {
   raycaster.setFromCamera(mouse, camera);
 
   // Check intersections for clicks
-  const intersects = raycaster.intersectObjects([...orbitPivot.children, distantPlanet]); // Include distantPlanet in objects
+  const intersects = raycaster.intersectObjects([...orbitPivot.children, distantPlanet, ufo]); // Include distantPlanet and UFO in objects
   if (intersects.length > 0) {
     const clickedObject = intersects[0].object;
 
     // Check if the clicked object is the "Happy" object
     if (clickedObject.name === 'Happy') {
       moveToDistantPlanet(); // Move to the distant planet
+    } 
+    // Check if the clicked object is the "Heart" object
+    else if (clickedObject.name === 'Heart') {
+      moveToUFO(); // Move to the UFO
     }
   }
 }
+
+function moveToUFO() {
+  const duration = 2; // Duration of the camera transition
+
+  // Get the position of the UFO
+  const targetPosition = new THREE.Vector3();
+  ufo.getWorldPosition(targetPosition);
+
+  // Offset for the camera's final position (adjusted for a perfect view of the UFO)
+  const offset = new THREE.Vector3(50, 2.5, 25);
+  const newCameraPosition = targetPosition.clone().add(offset);
+
+  // Create the star tunnel geometry
+  const starGeometry = new THREE.BufferGeometry();
+  const starCount = 1000; // Number of stars in the tunnel
+  const starPositions = new Float32Array(starCount * 3);
+
+  // Calculate the direction vector from the current camera position to the UFO
+  const startPosition = camera.position.clone();
+  const direction = newCameraPosition.clone().sub(startPosition).normalize();
+
+  const tunnelRadius = 600; // Reduce the radius for a more focused tunnel
+
+  // Distribute stars more uniformly along the camera path
+  for (let i = 0; i < starCount; i++) {
+    const t = Math.random(); // Random factor for distance along the path
+    const pointOnPath = startPosition
+      .clone()
+      .add(direction.clone().multiplyScalar(t * newCameraPosition.distanceTo(startPosition)));
+
+    // Spread stars around the path in a circular distribution
+    const angle = Math.random() * Math.PI * 2; // Random angle around the path
+    const radius = Math.random() * tunnelRadius; // Random radius for circular spread
+    starPositions[i * 3] = pointOnPath.x + Math.cos(angle) * radius; // X position
+    starPositions[i * 3 + 1] = pointOnPath.y + Math.sin(angle) * radius; // Y position
+    starPositions[i * 3 + 2] = pointOnPath.z; // Z position aligned with the path
+  }
+
+  starGeometry.setAttribute("position", new THREE.BufferAttribute(starPositions, 3));
+
+  const starMaterial = new THREE.PointsMaterial({
+    color: 0xffffff,
+    size: 1.5, // Slightly smaller stars for better aesthetics
+    transparent: true,
+    opacity: 0.7,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+
+  const starEffect = new THREE.Points(starGeometry, starMaterial);
+  scene.add(starEffect);
+
+  // Smooth camera animation to the UFO
+  gsap.to(camera.position, {
+    x: newCameraPosition.x,
+    y: newCameraPosition.y,
+    z: newCameraPosition.z,
+    duration: duration,
+    onUpdate: () => {
+      camera.lookAt(targetPosition); // Ensure the camera always looks at the UFO
+    },
+    onComplete: () => {
+      camera.lookAt(targetPosition); // Final adjustment to face the UFO
+      scene.remove(starEffect); // Remove the stars once the animation is complete
+    },
+  });
+
+  // Animate stars moving more fluidly past the camera
+  gsap.to(starEffect.geometry.attributes.position.array, {
+    duration: duration,
+    onUpdate: () => {
+      const positions = starEffect.geometry.attributes.position.array;
+      for (let i = 0; i < starCount; i++) {
+        // Smoothly move stars along the direction of the camera path
+        positions[i * 3] -= direction.x * 20; // Slower movement for better fluidity
+        positions[i * 3 + 1] -= direction.y * 20;
+        positions[i * 3 + 2] -= direction.z * 20;
+
+        // Recycle stars when they move behind the camera
+        if (positions[i * 3 + 2] < startPosition.z) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = Math.random() * tunnelRadius;
+          positions[i * 3] = startPosition.x + Math.cos(angle) * radius; // X position
+          positions[i * 3 + 1] = startPosition.y + Math.sin(angle) * radius; // Y position
+          positions[i * 3 + 2] = startPosition.z + Math.random() * 500; // Z position in front of the camera
+        }
+      }
+      starEffect.geometry.attributes.position.needsUpdate = true;
+    },
+    repeat: -1, // Repeat continuously for the effect duration
+  });
+}
+
+
+
+
+
+
+
 
 function moveToDistantPlanet() {
   const duration = 2; // Duration of the camera transition
@@ -147,7 +250,7 @@ scene.add(pointLight, ambLight);
 // Helpers
 const lightHelper = new THREE.PointLightHelper(pointLight);
 const gridHelper = new THREE.GridHelper(200, 50);
-scene.add(lightHelper, gridHelper);
+//scene.add(lightHelper, gridHelper);
 
 // Orbit Controls
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -301,6 +404,83 @@ spade.position.set(0, 0, -30);
 orbitPivot.add(spade);
 
 ///////
+
+function createUFO() {
+  const ufo = new THREE.Group(); // Create a group for the UFO
+
+  // Saucer (Disk)
+  const saucerGeometry = new THREE.CylinderGeometry(20, 15, 3, 64); // Flatter shape
+  const saucerMaterial = new THREE.MeshStandardMaterial({
+    color: 0xaaaaaa,
+    metalness: 0.8,
+    roughness: 0.3,
+  });
+  const saucer = new THREE.Mesh(saucerGeometry, saucerMaterial);
+  saucer.rotation.x = Math.PI*2; // Horizontal alignment
+  ufo.add(saucer);
+
+  const domeGeometry = new THREE.SphereGeometry(8, 32, 32, 0, Math.PI); // Semi-circle
+  const domeMaterial = new THREE.MeshStandardMaterial({
+    color: 0x00ffcc,
+    metalness: 0.6,
+    roughness: 0.1,
+    transparent: true,
+    opacity: 0.7,
+  });
+  const dome = new THREE.Mesh(domeGeometry, domeMaterial);
+  
+  // Rotate dome to make it upright
+  dome.rotation.x = -Math.PI/2; // Flip the dome vertically
+  
+  // Position the dome on top of the saucer
+  dome.position.set(0, 1, 0); // Adjust the height based on saucer size
+  ufo.add(dome);
+
+  // Lights (Around the Perimeter)
+  const lightGeometry = new THREE.SphereGeometry(1, 16, 16);
+  const lightMaterial = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+  for (let i = 0; i < 12; i++) {
+    const light = new THREE.Mesh(lightGeometry, lightMaterial);
+    const angle = (i / 12) * Math.PI * 2; // Spread lights evenly around the saucer
+    light.position.set(
+      Math.cos(angle) * 17, // Radius slightly larger than the saucer
+      -1.5, // Slightly below the saucer
+      Math.sin(angle) * 17
+    );
+    ufo.add(light);
+  }
+
+  // Beam (Optional Glow Below UFO)
+  const beamGeometry = new THREE.ConeGeometry(7, 25, 32); // Narrower base and height
+  const beamMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffff00,
+    transparent: true,
+    opacity: 0.2,
+  });
+  const beam = new THREE.Mesh(beamGeometry, beamMaterial);
+  beam.position.set(0, -15, 0); // Centered below the saucer
+  beam.rotation.x = Math.PI; // Pointing downward
+  ufo.add(beam);
+
+  // Position UFO
+  ufo.position.set(400, 20, 200);
+
+  // Add UFO to the scene
+  scene.add(ufo);
+
+  // Add hovering animation
+  ufo.tick = () => {
+    ufo.position.y += Math.sin(Date.now() * 0.005) * 0.2; // Hovering effect
+    ufo.rotation.y += 0.01; // Slow rotation
+  };
+
+  return ufo;
+}
+
+// Create the UFO
+const ufo = createUFO();
+
+
 
 ///////////////////
 
@@ -591,14 +771,14 @@ document.getElementById('close-panel').addEventListener('click', () => {
 
 // Function to zoom back to the solar system
 function zoomToSolarSystem() {
-  const solarSystemPosition = new THREE.Vector3(0, 0, 30); // Adjust based on your solar system's center
+  const endPosition = new THREE.Vector3(40, 30, 30); // Final position closer to heart, crown, spade, and happy
   const duration = 3; // Duration of the camera animation in seconds
 
-  // Smoothly animate the camera back to the solar system
+  // Smoothly animate the camera back to the endPosition
   gsap.to(camera.position, {
-    x: solarSystemPosition.x,
-    y: solarSystemPosition.y,
-    z: solarSystemPosition.z,
+    x: endPosition.x,
+    y: endPosition.y,
+    z: endPosition.z,
     duration: duration,
     onUpdate: () => {
       camera.lookAt(orbitPivot.position); // Ensure the camera looks at the solar system
@@ -616,6 +796,7 @@ function animate() {
 
   // Rotate the pivot for orbiting effect
   // orbitPivot.rotation.y += 0.0005;
+  if (ufo.tick) ufo.tick();
 
   // Rotate individual planets around the pivot
   planets.forEach((planet) => {
@@ -659,12 +840,42 @@ function animate() {
 function moveCamera() {
   const t = document.body.getBoundingClientRect().top;
 
-  orbitPivot.rotation.y += t * -0.0001;
-  camera.position.z = Math.max(10, 30 + t * -0.01);
-  camera.position.x = THREE.MathUtils.clamp(t * -0.0002, -5, 5);
-  camera.rotation.y = THREE.MathUtils.clamp(t * -0.0002, -Math.PI / 4, Math.PI / 4);
+  // Fade out black overlay
+  const fadeOutFactor = Math.max(0, Math.min(1, -t / 500)); // Normalize between 0 and 1
+  const overlay = document.getElementById('black-overlay');
+  overlay.style.opacity = 1 - fadeOutFactor; // Reduce opacity as you scroll
+
+  // Define key points
+  const startPosition = new THREE.Vector3(0, 200, 400); // Start far away
+  const midPosition = new THREE.Vector3(50, 100, 150);  // Mid-zoom closer, slightly to the right
+  const endPosition = new THREE.Vector3(50, 30, 30);  
+
+  const centerOfSolarSystem = new THREE.Vector3(0, 0, 30); // Sun's position
+
+  if (fadeOutFactor < 0.5) {
+    // Phase 1: Smooth zoom-in to mid-position
+    const progress = fadeOutFactor / 0.5; // Scale to [0, 1]
+    camera.position.lerpVectors(startPosition, midPosition, progress);
+  } else {
+    // Phase 2: Transition to end position with slight orbital effect
+    const progress = (fadeOutFactor - 0.5) / 0.5; // Scale to [0, 1] for the second phase
+    camera.position.lerpVectors(midPosition, endPosition, progress);
+
+    // Add a slight orbital motion around the sun for dynamic effect
+    const angle = progress * Math.PI; // Semi-circle orbit effect
+    const radius = 20; // Distance to orbit around the sun
+    camera.position.x += radius * Math.sin(angle); // Offset to the right
+    camera.position.z += radius * Math.cos(angle);
+    camera.position.y += 10 * Math.sin(angle); // Add vertical oscillation
+  }
+
+  // Ensure the camera always looks at the sun
+  camera.lookAt(centerOfSolarSystem);
 }
 
 document.body.onscroll = moveCamera;
+
+
+
 
 animate();

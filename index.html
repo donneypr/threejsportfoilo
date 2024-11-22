@@ -11,7 +11,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   </head>
   <body>
+    <!-- Black Overlay with Breathing Text -->
+    <div id="black-overlay">
+      <p id="scroll-text">please scroll</p>
+    </div>
+
+    <!-- 3D Canvas -->
     <canvas id="background"></canvas> <!-- Ensure ID matches in JavaScript -->
+
     <!-- Retro Panel -->
     <div id="retro-panel" class="hidden">
       <div id="panel-header">
@@ -20,11 +27,12 @@
       </div>
       <p>
         Hi! My name is John Donato Prabahar, and I'm a 4th-year Software Engineering student at York University.
-        I am currently interested in Network Security and Convolutional Neural Networks.                I would like to work on backend systems in the future.
-        If you have any questions please feel free to have a look at my resume or contact me directly at donatoprabahar@gmail.com
+        I am currently interested in Network Security and Convolutional Neural Networks. I would like to work on backend systems in the future.
+        If you have any questions, please feel free to have a look at my resume or contact me directly at donatoprabahar@gmail.com.
       </p>
     </div>
-    <!-- Add a scrollable div to make the page scrollable -->
+
+    <!-- Scrollable Content to Allow Scrolling -->
     <div style="height: 2000px"></div>
 
     <script type="module" src="/main.js"></script> <!-- Link to your JS file -->
