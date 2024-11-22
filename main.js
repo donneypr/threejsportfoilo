@@ -6,9 +6,6 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 
-
-
-
 function onMouseClick(event) {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -28,7 +25,7 @@ function onMouseClick(event) {
 }
 
 function moveToDistantPlanet() {
-  const duration = 5; // Duration of the camera transition
+  const duration = 2; // Duration of the camera transition
 
   // Get the position of the distant planet
   const targetPosition = new THREE.Vector3();
@@ -303,7 +300,7 @@ spade.name = 'Spade';
 spade.position.set(0, 0, -30);
 orbitPivot.add(spade);
 
-
+///////
 
 ///////////////////
 
@@ -583,6 +580,36 @@ function updateTiltedComet() {
   tiltedTrail.geometry.attributes.position.needsUpdate = true;
 }
 
+document.getElementById('close-panel').addEventListener('click', () => {
+  const retroPanel = document.getElementById('retro-panel');
+  retroPanel.classList.remove('show'); // Hide the panel
+  retroPanel.classList.add('hidden'); // Add the hidden class for styling
+
+  // Zoom back into the solar system
+  zoomToSolarSystem();
+});
+
+// Function to zoom back to the solar system
+function zoomToSolarSystem() {
+  const solarSystemPosition = new THREE.Vector3(0, 0, 30); // Adjust based on your solar system's center
+  const duration = 3; // Duration of the camera animation in seconds
+
+  // Smoothly animate the camera back to the solar system
+  gsap.to(camera.position, {
+    x: solarSystemPosition.x,
+    y: solarSystemPosition.y,
+    z: solarSystemPosition.z,
+    duration: duration,
+    onUpdate: () => {
+      camera.lookAt(orbitPivot.position); // Ensure the camera looks at the solar system
+    },
+    onComplete: () => {
+      camera.lookAt(orbitPivot.position); // Final adjustment after animation
+    },
+  });
+}
+
+
 // Animation Loop
 function animate() {
   requestAnimationFrame(animate);
@@ -604,7 +631,6 @@ function animate() {
       distance * Math.sin(planet.userData.angle)
     );
   });
-
   // Update the comet and its trail
   updateComet();
   updateTiltedComet();
