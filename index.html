@@ -7,6 +7,9 @@
     <title>3D Website</title>
     <link rel="stylesheet" href="/style.css" /> <!-- Link to your CSS file -->
 
+    <!-- Add Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+
     <!-- Add GSAP library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   </head>
@@ -19,17 +22,77 @@
     <!-- 3D Canvas -->
     <canvas id="background"></canvas> <!-- Ensure ID matches in JavaScript -->
 
-    <!-- Retro Panel -->
+    <!-- About Me Retro Panel -->
     <div id="retro-panel" class="hidden">
       <div id="panel-header">
         <h1>About Me</h1>
-        <button id="close-panel">X</button>
+        <button id="close-panel" class="close-button">X</button>
       </div>
       <p>
         Hi! My name is John Donato Prabahar, and I'm a 4th-year Software Engineering student at York University.
         I am currently interested in Network Security and Convolutional Neural Networks. I would like to work on backend systems in the future.
         If you have any questions, please feel free to have a look at my resume or contact me directly at donatoprabahar@gmail.com.
       </p>
+    </div>
+
+    <!-- Projects Panel -->
+    <div id="projects-panel" class="hidden">
+      <div class="projects-panel-header">
+        <h1>My Projects</h1>
+        <button id="close-projects-panel" class="close-button">X</button>
+      </div>
+      <div class="projects-container">
+        <div class="project-card">
+          <h2>SlotSwap</h2>
+          <p>A timetable management system using Angular and Ruby on Rails.</p>
+          <p><strong>Technologies:</strong> Angular, Ruby on Rails, MySQL</p>
+        </div>
+        <div class="project-card">
+          <h2>Helpdesk Automation</h2>
+          <p>Automates helpdesk ticket responses using Selenium, BART, and TF-IDF.</p>
+          <p><strong>Technologies:</strong> Selenium, Python, BART, TF-IDF, LLaMA</p>
+        </div>
+        <div class="project-card">
+          <h2>Mimic Tweeter</h2>
+          <p>Scrapes and generates tweets mimicking specific user styles using LLaMA3 and Tweepy.</p>
+          <p><strong>Technologies:</strong> Tweepy, LLaMA3, Python</p>
+        </div>
+        <div class="project-card">
+          <h2>Philosophy Bot</h2>
+          <p>Posts hourly philosophical quotes with relevant hashtags using a scheduling system.</p>
+          <p><strong>Technologies:</strong> Tweepy, Python, Cron Jobs</p>
+        </div>
+        <div class="project-card">
+          <h2>DonLang</h2>
+          <p>A programming language created from Ruby with custom syntax and features.</p>
+          <p><strong>Technologies:</strong> Ruby, Custom Lexer and Parser</p>
+        </div>
+        <div class="project-card">
+          <h2>Adblocker and Cookie Cleaner</h2>
+          <p>A Chrome extension to block ads and clear cookies.</p>
+          <p><strong>Technologies:</strong> JavaScript, Chrome Extensions</p>
+        </div>
+        <div class="project-card">
+          <h2>Azure Sentinel Honeypot</h2>
+          <p>Configured an RDP honeypot to monitor and visualize attacks globally in Azure Sentinel.</p>
+          <p><strong>Technologies:</strong> PowerShell, Azure Sentinel, KQL</p>
+        </div>
+        <div class="project-card">
+          <h2>Fire Safety System</h2>
+          <p>A real-time fire monitoring and extinguishing system using MATLAB and Arduino.</p>
+          <p><strong>Technologies:</strong> MATLAB, Arduino, DHT22 Sensor</p>
+        </div>
+        <div class="project-card">
+          <h2>Iris Identification</h2>
+          <p>Classifies iris species using a neural network in PyTorch.</p>
+          <p><strong>Technologies:</strong> PyTorch, Neural Networks, Scikit-learn</p>
+        </div>
+        <div class="project-card">
+          <h2>MNIST Digit Classification</h2>
+          <p>Classifies handwritten digits using a CNN trained on the MNIST dataset.</p>
+          <p><strong>Technologies:</strong> PyTorch, CNN, Matplotlib, NumPy</p>
+        </div>
+      </div>
     </div>
 
     <!-- Scrollable Content to Allow Scrolling -->

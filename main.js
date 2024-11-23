@@ -36,7 +36,7 @@ function moveToUFO() {
   ufo.getWorldPosition(targetPosition);
 
   // Offset for the camera's final position (adjusted for a perfect view of the UFO)
-  const offset = new THREE.Vector3(50, 2.5, 25);
+  const offset = new THREE.Vector3(50, 2.5, 25); // Adjust as needed
   const newCameraPosition = targetPosition.clone().add(offset);
 
   // Create the star tunnel geometry
@@ -48,16 +48,16 @@ function moveToUFO() {
   const startPosition = camera.position.clone();
   const direction = newCameraPosition.clone().sub(startPosition).normalize();
 
-  const tunnelRadius = 600; // Reduce the radius for a more focused tunnel
+  const tunnelRadius = 300; // Radius of the star tunnel
 
-  // Distribute stars more uniformly along the camera path
+  // Distribute stars along the camera path
   for (let i = 0; i < starCount; i++) {
     const t = Math.random(); // Random factor for distance along the path
     const pointOnPath = startPosition
       .clone()
       .add(direction.clone().multiplyScalar(t * newCameraPosition.distanceTo(startPosition)));
 
-    // Spread stars around the path in a circular distribution
+    // Spread stars around the path (circular distribution)
     const angle = Math.random() * Math.PI * 2; // Random angle around the path
     const radius = Math.random() * tunnelRadius; // Random radius for circular spread
     starPositions[i * 3] = pointOnPath.x + Math.cos(angle) * radius; // X position
@@ -91,34 +91,29 @@ function moveToUFO() {
     onComplete: () => {
       camera.lookAt(targetPosition); // Final adjustment to face the UFO
       scene.remove(starEffect); // Remove the stars once the animation is complete
+
+      // Show the projects panel
+      showProjectsPanel();
     },
   });
 
-  // Animate stars moving more fluidly past the camera
-  gsap.to(starEffect.geometry.attributes.position.array, {
+  // Animate stars moving along the tunnel path
+  gsap.to(camera.position, {
+    x: newCameraPosition.x,
+    y: newCameraPosition.y,
+    z: newCameraPosition.z,
     duration: duration,
     onUpdate: () => {
-      const positions = starEffect.geometry.attributes.position.array;
-      for (let i = 0; i < starCount; i++) {
-        // Smoothly move stars along the direction of the camera path
-        positions[i * 3] -= direction.x * 20; // Slower movement for better fluidity
-        positions[i * 3 + 1] -= direction.y * 20;
-        positions[i * 3 + 2] -= direction.z * 20;
-
-        // Recycle stars when they move behind the camera
-        if (positions[i * 3 + 2] < startPosition.z) {
-          const angle = Math.random() * Math.PI * 2;
-          const radius = Math.random() * tunnelRadius;
-          positions[i * 3] = startPosition.x + Math.cos(angle) * radius; // X position
-          positions[i * 3 + 1] = startPosition.y + Math.sin(angle) * radius; // Y position
-          positions[i * 3 + 2] = startPosition.z + Math.random() * 500; // Z position in front of the camera
-        }
-      }
-      starEffect.geometry.attributes.position.needsUpdate = true;
+      camera.lookAt(targetPosition); // Ensure the camera always looks at the UFO
     },
-    repeat: -1, // Repeat continuously for the effect duration
+    onComplete: () => {
+      camera.lookAt(targetPosition); // Final adjustment to face the UFO
+      scene.remove(starEffect); // Remove the stars once the animation is complete
+      showProjectsPanel(); // Show the projects panel and disable scrolling
+    },
   });
 }
+
 
 
 
@@ -219,12 +214,49 @@ function moveToDistantPlanet() {
 
 
 
+const retroPanel = document.getElementById("retro-panel");
+const projectsPanel = document.getElementById("projects-panel");
+
+// Close buttons for panels
+const closeRetroPanelButton = document.getElementById("close-panel");
+const closeProjectsPanelButton = document.getElementById("close-projects-panel");
+
+// Function to show the retro panel
 function showRetroPanel() {
-  const retroPanel = document.getElementById("retro-panel");
   retroPanel.classList.remove("hidden");
   retroPanel.classList.add("show");
+  document.body.classList.add("no-scroll"); // Disable scrolling on the body
 }
 
+// Function to hide the retro panel and zoom back into the solar system
+closeRetroPanelButton.addEventListener("click", () => {
+  retroPanel.classList.remove("show");
+  retroPanel.classList.add("hidden");
+  document.body.classList.remove("no-scroll"); // Re-enable scrolling on the body
+
+  // Zoom back into the solar system
+  zoomToSolarSystem();
+});
+
+// Function to show the projects panel
+function showProjectsPanel() {
+  projectsPanel.classList.remove("hidden");
+  projectsPanel.classList.add("show");
+  document.body.classList.add("no-scroll"); // Disable scrolling on the body
+}
+
+// Function to hide the projects panel and zoom back into the solar system
+function hideProjectsPanel() {
+  projectsPanel.classList.remove("show");
+  projectsPanel.classList.add("hidden");
+  document.body.classList.remove("no-scroll"); // Re-enable scrolling on the body
+
+  // Zoom back into the solar system
+  zoomToSolarSystem();
+}
+
+// Attach event listener to close button of the projects panel
+closeProjectsPanelButton.addEventListener("click", hideProjectsPanel);
 
 
 // Add click event listener
